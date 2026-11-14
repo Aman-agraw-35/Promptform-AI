@@ -40,4 +40,8 @@ public class ProjectEntity {
     public String getName() { return name; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+
+    public void markUpdated(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

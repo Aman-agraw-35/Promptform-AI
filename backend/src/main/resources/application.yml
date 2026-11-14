@@ -26,5 +26,5 @@ promptform:
     model: ${GEMINI_MODEL:gemini-3.5-flash}
     timeout-seconds: ${GEMINI_TIMEOUT_SECONDS:30}
   auth:
-    jwt-secret: ${JWT_SECRET:change-me-in-development-only-change-me}
+    jwt-secret: ${JWT_SECRET:}
     access-token-minutes: ${JWT_ACCESS_TOKEN_MINUTES:60}

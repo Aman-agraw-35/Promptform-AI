@@ -52,6 +52,8 @@ public class ProjectService {
         VersionEntity version = new VersionEntity(
                 UUID.randomUUID(), projectId, request.parentVersionId(), request.prompt().trim(),
                 request.schema(), Instant.now());
+        project.markUpdated(Instant.now());
+        projectRepository.save(project);
         return toVersionResponse(versionRepository.save(version));
     }
 
