@@ -48,7 +48,7 @@ public class GeminiLLMProvider implements LLMProvider {
     }
 
     private String systemPrompt(String prompt) {
-        return "Generate a form schema matching the response schema exactly. Return at least one child field. Supported node types are text, number, textarea, select, radio, and checkboxGroup. Every field needs a unique name and label. Option fields require options with value and label. Do not include HTML, code, markdown, explanations, or an outer wrapper. User request: " + prompt;
+        return "Generate a form schema matching the response schema exactly. Return at least one child field. Supported node types are text, number, textarea, select, radio, and checkboxGroup. Every field needs a unique name and label. Option fields require options with value and label. Use visibleWhen with a field and equals when a field is conditional. Use validation for min, max, or pattern rules. Do not include HTML, code, markdown, explanations, or an outer wrapper. User request: " + prompt;
     }
 
     private JsonNode responseSchema() throws Exception {
@@ -69,6 +69,25 @@ public class GeminiLLMProvider implements LLMProvider {
                       "label": {"type": "string"},
                       "description": {"type": "string"},
                       "required": {"type": "boolean"},
+                      "defaultValue": {"type": ["string", "number", "boolean", "null"]},
+                      "visibleWhen": {
+                        "type": "object",
+                        "properties": {
+                          "field": {"type": "string"},
+                          "equals": {"type": "string"},
+                          "notEquals": {"type": "string"},
+                          "in": {"type": "array", "items": {"type": "string"}}
+                        },
+                        "required": ["field"]
+                      },
+                      "validation": {
+                        "type": "object",
+                        "properties": {
+                          "min": {"type": "number"},
+                          "max": {"type": "number"},
+                          "pattern": {"type": "string"}
+                        }
+                      },
                       "options": {
                         "type": "array",
                         "items": {

@@ -10,6 +10,8 @@ public final class GenerationModels {
 
     public record GenerateRequest(@NotBlank @Size(max = 2000) String prompt) {}
     public record FormOption(String value, String label) {}
-    public record UiNode(String type, String name, String label, String description, Boolean required, List<FormOption> options, List<UiNode> children) {}
+    public record VisibleWhen(String field, String equals, String notEquals, List<String> in) {}
+    public record ValidationRules(Double min, Double max, String pattern) {}
+    public record UiNode(String type, String name, String label, String description, Boolean required, Object defaultValue, List<FormOption> options, List<UiNode> children, VisibleWhen visibleWhen, ValidationRules validation) {}
     public record UiSchema(String title, String description, List<UiNode> children) {}
 }
