@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://promptform.local/schema/ui-schema.json",
+  "title": "Promptform UI schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "children"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "children": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/node" }
+    }
+  },
+  "$defs": {
+    "option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "label"],
+      "properties": {
+        "value": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 }
+      }
+    },
+    "visibleWhen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field"],
+      "properties": {
+        "field": { "type": "string", "minLength": 1 },
+        "equals": { "type": "string" },
+        "notEquals": { "type": "string" },
+        "in": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      },
+      "minProperties": 2,
+      "maxProperties": 2
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "pattern": { "type": "string" }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "label"],
+      "properties": {
+        "type": {
+          "enum": ["text", "number", "textarea", "select", "radio", "checkboxGroup", "section", "columns"]
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "required": { "type": "boolean" },
+        "defaultValue": {},
+        "options": { "type": "array", "items": { "$ref": "#/$defs/option" } },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+        "visibleWhen": { "$ref": "#/$defs/visibleWhen" },
+        "validation": { "$ref": "#/$defs/validation" }
+      }
+    }
+  }
+}

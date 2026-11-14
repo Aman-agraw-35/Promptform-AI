@@ -1,21 +1,29 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useWatch } from "react-hook-form";
+import { isNodeVisible, type FormValues } from "@/features/form-builder/lib/conditions";
+import { buildValidationSchema } from "@/features/form-builder/lib/validation";
 import type { UiNode, UiSchema } from "@/features/form-builder/lib/schema";
 
 function Field({
   node,
   register,
+  values,
 }: {
   node: UiNode;
   register: ReturnType<typeof useForm>["register"];
+  values: FormValues;
 }) {
-  if (node.type === "section") {
+  if (!isNodeVisible(node, values)) return null;
+
+  if (node.type === "section" || node.type === "columns") {
     return (
-      <fieldset className="form-section">
+      <fieldset className={node.type === "columns" ? "form-columns" : "form-section"}>
         <legend>{node.label}</legend>
         {node.children?.map((child) => (
-          <Field key={child.name ?? child.label} node={child} register={register} />
+          <Field key={child.name ?? child.label} node={child} register={register} values={values} />
         ))}
       </fieldset>
     );
@@ -69,17 +77,32 @@ function Field({
 }
 
 export function FormRenderer({ schema }: { schema: UiSchema }) {
-  const { register } = useForm();
+  const { control, handleSubmit, register } = useForm<FormValues>();
+  const values = useWatch({ control });
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  function submit(values: FormValues) {
+    const result = buildValidationSchema(schema, values).safeParse(values);
+    setSubmitError(
+      result.success ? null : (result.error.issues[0]?.message ?? "Check the form fields."),
+    );
+  }
+
   return (
-    <form className="rendered-form" onSubmit={(event) => event.preventDefault()}>
+    <form className="rendered-form" onSubmit={handleSubmit(submit)}>
       <div className="form-heading">
         <p className="eyebrow">Live preview</p>
         <h2>{schema.title}</h2>
         {schema.description ? <p>{schema.description}</p> : null}
       </div>
       {schema.children.map((node) => (
-        <Field key={node.name ?? node.label} node={node} register={register} />
+        <Field key={node.name ?? node.label} node={node} register={register} values={values} />
       ))}
+      {submitError ? (
+        <p className="error-message" role="alert">
+          {submitError}
+        </p>
+      ) : null}
       <button className="submit-button" type="submit">
         Submit form
       </button>
