@@ -1,14 +1,38 @@
 package com.promptform.api.web;
 
+import com.promptform.api.auth.AuthException;
 import com.promptform.api.generation.GenerationException;
+import com.promptform.api.project.ProjectException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(ProjectException.class)
+    public ProblemDetail handleProject(ProjectException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+        problem.setTitle("Project request failed");
+        return problem;
+    }
+
+    @ExceptionHandler(AuthException.class)
+    public ProblemDetail handleAuthConflict(AuthException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        problem.setTitle("Authentication request failed");
+        return problem;
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ProblemDetail handleBadCredentials(BadCredentialsException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, exception.getMessage());
+        problem.setTitle("Authentication failed");
+        return problem;
+    }
+
     @ExceptionHandler(GenerationException.class)
     public ProblemDetail handleGeneration(GenerationException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());

@@ -1,0 +1,42 @@
+package com.promptform.api.auth;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "users")
+public class UserEntity {
+    @Id
+    private UUID id;
+
+    @Column(nullable = false, unique = true, length = 320)
+    private String email;
+
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
+
+    @Column(name = "display_name", nullable = false, length = 120)
+    private String displayName;
+
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    protected UserEntity() { }
+
+    public UserEntity(UUID id, String email, String passwordHash, String displayName, Instant createdAt) {
+        this.id = id;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.displayName = displayName;
+        this.createdAt = createdAt;
+    }
+
+    public UUID getId() { return id; }
+    public String getEmail() { return email; }
+    public String getPasswordHash() { return passwordHash; }
+    public String getDisplayName() { return displayName; }
+}
