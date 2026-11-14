@@ -1,0 +1,12 @@
+{
+  "name": "promptform-ai",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm --prefix frontend run dev\" \"mvn -f backend/pom.xml spring-boot:run\"",
+    "build": "npm --prefix frontend run build && mvn -f backend/pom.xml verify",
+    "lint": "npm --prefix frontend run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

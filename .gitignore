@@ -1,0 +1,13 @@
+node_modules/
+.m2/
+.npm-cache/
+.next/
+out/
+target/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.log
+.idea/
+.vscode/

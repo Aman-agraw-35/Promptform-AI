@@ -1,0 +1,29 @@
+{
+  "name": "promptform-frontend",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "lint": "next lint",
+    "format": "prettier --write \"**/*.{ts,tsx,css,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,css,json}\""
+  },
+  "dependencies": {
+    "next": "^15.1.6",
+    "promptform-ai": "file:..",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@next/swc-wasm-nodejs": "^15.5.29",
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.3",
+    "@types/react-dom": "^19.0.2",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.1.6",
+    "prettier": "^3.5.3",
+    "typescript": "^5.7.2"
+  }
+}

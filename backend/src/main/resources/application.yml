@@ -1,0 +1,16 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: promptform-api
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+promptform:
+  llm:
+    provider: ${PROMPTFORM_LLM_PROVIDER:demo}
+    gemini-api-key: ${GEMINI_API_KEY:}
+    model: ${GEMINI_MODEL:gemini-3.5-flash}
+    timeout-seconds: ${GEMINI_TIMEOUT_SECONDS:30}
