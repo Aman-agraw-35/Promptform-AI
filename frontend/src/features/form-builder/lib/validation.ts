@@ -18,10 +18,13 @@ export function buildValidationSchema(schema: UiSchema, values: FormValues) {
     let field: z.ZodTypeAny;
 
     if (node.type === "number") {
-      let numericField = z.coerce.number();
+      let numericField = z.number();
       if (rules?.min !== undefined) numericField = numericField.min(rules.min);
       if (rules?.max !== undefined) numericField = numericField.max(rules.max);
-      field = numericField;
+      field = z.preprocess(
+        (value) => (value === "" || value === undefined ? undefined : Number(value)),
+        numericField,
+      );
     } else {
       let textField = z.string();
       if (rules?.pattern) textField = textField.regex(new RegExp(rules.pattern));

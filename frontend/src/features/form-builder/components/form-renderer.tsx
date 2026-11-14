@@ -62,7 +62,12 @@ function Field({
         <div className="option-list">
           {options.map((option) => (
             <label className="option" key={option.value}>
-              <input type="checkbox" value={option.value} {...inputProps} />
+              <input
+                id={`${node.name}-${option.value}`}
+                type="checkbox"
+                value={option.value}
+                {...inputProps}
+              />
               {option.label}
             </label>
           ))}

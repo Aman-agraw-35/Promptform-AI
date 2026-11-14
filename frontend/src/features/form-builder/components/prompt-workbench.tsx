@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { FormRenderer } from "@/features/form-builder/components/form-renderer";
 import { generateSchema } from "@/features/form-builder/lib/generation-api";
 import type { UiSchema } from "@/features/form-builder/lib/schema";
@@ -13,10 +14,12 @@ export function PromptWorkbench() {
   const [schema, setSchema] = useState<UiSchema | null>(null);
   const [status, setStatus] = useState("Ready to build");
   const [error, setError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   async function handleGenerate() {
     if (!prompt.trim()) return;
     setError(null);
+    setIsGenerating(true);
     setStatus("Reading your brief…");
     try {
       await generateSchema(prompt, (event) => {
@@ -32,15 +35,17 @@ export function PromptWorkbench() {
       setError(
         generationError instanceof Error ? generationError.message : "Something went wrong.",
       );
+    } finally {
+      setIsGenerating(false);
     }
   }
 
   return (
     <main className="shell">
       <header className="topbar">
-        <a className="brand" href="/" aria-label="Promptform home">
+        <Link className="brand" href="/" aria-label="Promptform home">
           <span className="brand-mark">P</span>promptform
-        </a>
+        </Link>
         <span className="topbar-note">AI form builder</span>
       </header>
       <section className="intro">
@@ -57,7 +62,7 @@ export function PromptWorkbench() {
               <p className="eyebrow">01 / Brief</p>
               <h2>What are you building?</h2>
             </div>
-            <span className="status-dot" aria-label={status} />
+            <span className="status-dot" aria-hidden="true" />
           </div>
           <label className="sr-only" htmlFor="prompt">
             Describe the form you want to build
@@ -70,7 +75,12 @@ export function PromptWorkbench() {
           />
           <div className="prompt-footer">
             <span>Be specific about fields and choices</span>
-            <button className="build-button" onClick={handleGenerate} type="button">
+            <button
+              className="build-button"
+              disabled={isGenerating}
+              onClick={handleGenerate}
+              type="button"
+            >
               Build form <span aria-hidden="true">↗</span>
             </button>
           </div>
@@ -86,7 +96,9 @@ export function PromptWorkbench() {
               <p className="eyebrow">02 / Preview</p>
               <h2>Your form appears here</h2>
             </div>
-            <span className="status-label">{status}</span>
+            <span className="status-label" aria-live="polite">
+              {status}
+            </span>
           </div>
           {schema ? (
             <FormRenderer schema={schema} />
