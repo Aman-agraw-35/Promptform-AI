@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import type { UiNode, UiSchema } from "@/lib/schema";
+import type { UiNode, UiSchema } from "@/features/form-builder/lib/schema";
 
 function Field({
   node,

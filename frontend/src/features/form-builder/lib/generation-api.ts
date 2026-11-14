@@ -1,4 +1,4 @@
-import type { UiSchema } from "@/lib/schema";
+import type { UiSchema } from "@/features/form-builder/lib/schema";
 
 type StreamEvent = {
   event: string;

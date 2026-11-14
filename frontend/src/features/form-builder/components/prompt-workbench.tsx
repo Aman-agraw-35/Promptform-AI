@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { generateSchema } from "@/lib/generation-api";
-import type { UiSchema } from "@/lib/schema";
-import { FormRenderer } from "@/components/form-renderer";
+import { FormRenderer } from "@/features/form-builder/components/form-renderer";
+import { generateSchema } from "@/features/form-builder/lib/generation-api";
+import type { UiSchema } from "@/features/form-builder/lib/schema";
 
 const starterPrompt =
   "Create an insurance claim form with the customer's name, email, vehicle type, and incident description.";

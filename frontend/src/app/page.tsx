@@ -1,4 +1,4 @@
-import { PromptWorkbench } from "@/components/prompt-workbench";
+import { PromptWorkbench } from "@/features/form-builder";
 
 export default function Home() {
   return <PromptWorkbench />;
