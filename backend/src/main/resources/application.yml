@@ -3,6 +3,17 @@ server:
 spring:
   application:
     name: promptform-api
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/promptform}
+    username: ${DATABASE_USERNAME:promptform}
+    password: ${DATABASE_PASSWORD:promptform}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
 management:
   endpoints:
     web:
@@ -14,3 +25,6 @@ promptform:
     gemini-api-key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemini-3.5-flash}
     timeout-seconds: ${GEMINI_TIMEOUT_SECONDS:30}
+  auth:
+    jwt-secret: ${JWT_SECRET:change-me-in-development-only-change-me}
+    access-token-minutes: ${JWT_ACCESS_TOKEN_MINUTES:60}
