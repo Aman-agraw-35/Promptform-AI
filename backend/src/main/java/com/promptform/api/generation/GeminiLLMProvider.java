@@ -3,6 +3,8 @@ package com.promptform.api.generation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -14,6 +16,7 @@ import java.time.Duration;
 @Component
 @ConditionalOnProperty(name = "promptform.llm.provider", havingValue = "gemini")
 public class GeminiLLMProvider implements LLMProvider {
+    private static final Logger logger = LoggerFactory.getLogger(GeminiLLMProvider.class);
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
     private final String apiKey;
@@ -40,7 +43,10 @@ public class GeminiLLMProvider implements LLMProvider {
             String body = objectMapper.writeValueAsString(new GeminiRequest(new GeminiContent[]{new GeminiContent(new GeminiPart[]{new GeminiPart(systemPrompt(prompt))})}, new GenerationConfig("application/json", responseSchema())));
             HttpRequest request = HttpRequest.newBuilder(URI.create("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent")).timeout(timeout).header("Content-Type", "application/json").header("x-goog-api-key", apiKey).POST(HttpRequest.BodyPublishers.ofString(body)).build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() / 100 != 2) throw new GenerationException("Gemini returned HTTP " + response.statusCode() + ": " + response.body());
+            if (response.statusCode() / 100 != 2) {
+                logger.error("Gemini request failed with HTTP status {}", response.statusCode());
+                throw new GenerationException("Gemini generation failed with HTTP " + response.statusCode() + ".");
+            }
             JsonNode root = objectMapper.readTree(response.body());
             String text = root.at("/candidates/0/content/parts/0/text").asText();
             if (text.isBlank()) throw new GenerationException("Gemini returned an empty result.");

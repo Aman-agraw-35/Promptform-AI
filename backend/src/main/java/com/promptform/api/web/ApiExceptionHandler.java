@@ -4,6 +4,7 @@ import com.promptform.api.auth.AuthException;
 import com.promptform.api.eval.EvalException;
 import com.promptform.api.generation.GenerationException;
 import com.promptform.api.project.ProjectException;
+import com.promptform.api.ratelimit.RateLimitException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -45,6 +46,13 @@ public class ApiExceptionHandler {
     public ProblemDetail handleGeneration(GenerationException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
         problem.setTitle("Form generation failed");
+        return problem;
+    }
+
+    @ExceptionHandler(RateLimitException.class)
+    public ProblemDetail handleRateLimit(RateLimitException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage());
+        problem.setTitle("Too many requests");
         return problem;
     }
 

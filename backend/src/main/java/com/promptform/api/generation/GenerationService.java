@@ -1,10 +1,16 @@
 package com.promptform.api.generation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.promptform.api.config.PromptCacheProperties;
 import com.promptform.api.generation.GenerationModels.UiSchema;
 import com.promptform.api.observability.GenerationMetrics;
 import org.springframework.stereotype.Service;
 import io.micrometer.core.instrument.Timer;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class GenerationService {
@@ -14,18 +20,24 @@ public class GenerationService {
     private final ObjectMapper objectMapper;
     private final SchemaValidator validator;
     private final GenerationMetrics metrics;
+    private final PromptCacheProperties cacheProperties;
+    private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
 
     public GenerationService(LLMProvider provider, ObjectMapper objectMapper, SchemaValidator validator,
-                             GenerationMetrics metrics) {
+                             GenerationMetrics metrics, PromptCacheProperties cacheProperties) {
         this.provider = provider;
         this.objectMapper = objectMapper;
         this.validator = validator;
         this.metrics = metrics;
+        this.cacheProperties = cacheProperties;
     }
 
     public UiSchema generate(String prompt) {
+        String normalizedPrompt = normalizePrompt(prompt);
+        UiSchema cachedSchema = getCached(normalizedPrompt);
+        if (cachedSchema != null) return cachedSchema;
         Timer.Sample sample = metrics.start();
-        String currentPrompt = prompt;
+        String currentPrompt = normalizedPrompt;
         String lastResponse = "";
         int repairAttempts = 0;
         long totalTokens = 0;
@@ -38,13 +50,14 @@ public class GenerationService {
                     UiSchema schema = parseAndValidate(lastResponse);
                     metrics.recordTokenUsage(totalTokens);
                     metrics.recordSuccess(sample, repairAttempts);
+                    cache(normalizedPrompt, schema);
                     return schema;
                 } catch (GenerationException exception) {
                     if (attempt == MAX_REPAIR_ATTEMPTS) {
                         throw new GenerationException("The model could not produce a valid form after repair attempts.", exception);
                     }
                     repairAttempts++;
-                    currentPrompt = repairPrompt(prompt, lastResponse, exception.getMessage());
+                    currentPrompt = repairPrompt(normalizedPrompt, lastResponse, exception.getMessage());
                 }
             }
         } catch (RuntimeException exception) {
@@ -52,6 +65,31 @@ public class GenerationService {
             throw exception;
         }
         throw new GenerationException("The model could not produce a valid form.");
+    }
+
+    private String normalizePrompt(String prompt) {
+        if (prompt == null) throw new GenerationException("A prompt is required.");
+        String normalized = prompt.strip();
+        if (normalized.isEmpty()) throw new GenerationException("A prompt is required.");
+        if (normalized.indexOf('\u0000') >= 0) throw new GenerationException("The prompt contains an unsupported character.");
+        return normalized;
+    }
+
+    private UiSchema getCached(String prompt) {
+        if (!cacheProperties.enabled()) return null;
+        CacheEntry entry = cache.get(prompt);
+        if (entry == null) return null;
+        if (entry.createdAt().plus(Duration.ofSeconds(cacheProperties.ttlSeconds())).isBefore(Instant.now())) {
+            cache.remove(prompt, entry);
+            return null;
+        }
+        return entry.schema();
+    }
+
+    private void cache(String prompt, UiSchema schema) {
+        if (!cacheProperties.enabled()) return;
+        if (cache.size() >= cacheProperties.maxEntries()) cache.clear();
+        cache.put(prompt, new CacheEntry(Instant.now(), schema));
     }
 
     private UiSchema parseAndValidate(String response) {
@@ -87,4 +125,6 @@ public class GenerationService {
         if (objectStart < 0 || objectEnd <= objectStart) throw new GenerationException("The model returned invalid JSON.");
         return normalized.substring(objectStart, objectEnd + 1);
     }
+
+    private record CacheEntry(Instant createdAt, UiSchema schema) {}
 }

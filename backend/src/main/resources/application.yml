@@ -14,12 +14,24 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
 management:
   endpoints:
     web:
       exposure:
         include: health,info,metrics,prometheus
 promptform:
+  redis:
+    enabled: ${REDIS_ENABLED:false}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    requests-per-minute: ${RATE_LIMIT_REQUESTS_PER_MINUTE:20}
+  prompt-cache:
+    enabled: ${PROMPT_CACHE_ENABLED:true}
+    max-entries: ${PROMPT_CACHE_MAX_ENTRIES:500}
+    ttl-seconds: ${PROMPT_CACHE_TTL_SECONDS:900}
   llm:
     provider: ${PROMPTFORM_LLM_PROVIDER:demo}
     gemini-api-key: ${GEMINI_API_KEY:}
