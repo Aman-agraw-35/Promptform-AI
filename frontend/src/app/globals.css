@@ -478,19 +478,22 @@ kbd {
   inset: 14px;
   border: 1px solid rgba(32, 35, 31, 0.17);
   border-radius: 50%;
+  transform-origin: 50% 50%;
+  will-change: transform;
 }
 .ring-one {
   animation: spin 16s linear infinite;
 }
 .ring-one::before {
   position: absolute;
-  top: 17px;
-  left: 4px;
-  width: 5px;
-  height: 5px;
+  top: -3px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #20231f;
   content: "";
+  transform: translateX(-50%);
 }
 .ring-two {
   inset: 0;
@@ -499,13 +502,14 @@ kbd {
 }
 .ring-two::after {
   position: absolute;
-  right: 20px;
-  bottom: 8px;
-  width: 4px;
-  height: 4px;
+  top: 50%;
+  right: -3px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--accent);
   content: "";
+  transform: translateY(-50%);
 }
 .orbit-core {
   position: absolute;
@@ -523,6 +527,7 @@ kbd {
   font-family: Georgia, serif;
   font-size: 26px;
   font-style: italic;
+  animation: core-breathe 4s ease-in-out infinite;
 }
 .empty-title {
   margin: 0;
@@ -750,6 +755,15 @@ kbd {
 @keyframes blink {
   50% {
     opacity: 0.3;
+  }
+}
+@keyframes core-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 9px rgba(32, 35, 31, 0.06);
+  }
+  50% {
+    box-shadow: 0 0 0 14px rgba(216, 244, 94, 0.12);
   }
 }
 
