@@ -16,7 +16,10 @@ public class GeminiProperties {
     public String provider() { return provider; }
     public String apiKey() { return geminiApiKey; }
     public String model() { return model; }
-    public Duration timeout() { return Duration.ofSeconds(timeoutSeconds); }
+    public Duration timeout() {
+        if (timeoutSeconds < 1) throw new IllegalStateException("Gemini timeout must be at least one second.");
+        return Duration.ofSeconds(timeoutSeconds);
+    }
     public double costPerMillionTokens() { return costPerMillionTokens; }
     public void setProvider(String provider) { this.provider = provider; }
     public void setGeminiApiKey(String value) { this.geminiApiKey = value; }

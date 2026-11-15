@@ -25,6 +25,10 @@ export function buildValidationSchema(schema: UiSchema, values: FormValues) {
         (value) => (value === "" || value === undefined ? undefined : Number(value)),
         numericField,
       );
+    } else if (node.type === "checkboxGroup") {
+      let checkboxField = z.array(z.string());
+      if (node.required) checkboxField = checkboxField.min(1, "Choose at least one option.");
+      field = checkboxField;
     } else {
       let textField = z.string();
       if (rules?.pattern) textField = textField.regex(new RegExp(rules.pattern));

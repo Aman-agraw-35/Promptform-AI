@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { useWatch } from "react-hook-form";
+import { useForm, useWatch, type UseFormRegister } from "react-hook-form";
 import { isNodeVisible, type FormValues } from "@/features/form-builder/lib/conditions";
 import { buildValidationSchema } from "@/features/form-builder/lib/validation";
 import type { UiNode, UiSchema } from "@/features/form-builder/lib/schema";
@@ -13,7 +12,7 @@ function Field({
   values,
 }: {
   node: UiNode;
-  register: ReturnType<typeof useForm>["register"];
+  register: UseFormRegister<FormValues>;
   values: FormValues;
 }) {
   if (!isNodeVisible(node, values)) return null;
@@ -29,7 +28,11 @@ function Field({
     );
   }
 
-  const inputProps = { ...register(node.name ?? "field", { required: node.required }) };
+  const inputProps = {
+    ...register(node.name ?? "field", {
+      required: node.type === "checkboxGroup" ? false : node.required,
+    }),
+  };
   const options = node.options ?? [];
   return (
     <div className="field">
@@ -66,6 +69,9 @@ function Field({
                 id={`${node.name}-${option.value}`}
                 type="checkbox"
                 value={option.value}
+                defaultChecked={
+                  Array.isArray(node.defaultValue) && node.defaultValue.includes(option.value)
+                }
                 {...inputProps}
               />
               {option.label}

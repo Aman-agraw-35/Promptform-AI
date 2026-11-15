@@ -1,6 +1,9 @@
 package com.promptform.api.auth;
 
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import com.promptform.api.ratelimit.RateLimitException;
+import com.promptform.api.ratelimit.RateLimiter;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,24 +19,36 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController {
     private final AuthService authService;
+    private final RateLimiter rateLimiter;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, RateLimiter rateLimiter) {
         this.authService = authService;
+        this.rateLimiter = rateLimiter;
     }
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public AuthModels.AuthResponse register(@Valid @RequestBody AuthModels.RegisterRequest request) {
+    public AuthModels.AuthResponse register(@Valid @RequestBody AuthModels.RegisterRequest request,
+                                            HttpServletRequest httpRequest) {
+        checkRateLimit(httpRequest);
         return authService.register(request);
     }
 
     @PostMapping("/login")
-    public AuthModels.AuthResponse login(@Valid @RequestBody AuthModels.LoginRequest request) {
+    public AuthModels.AuthResponse login(@Valid @RequestBody AuthModels.LoginRequest request,
+                                         HttpServletRequest httpRequest) {
+        checkRateLimit(httpRequest);
         return authService.login(request);
     }
 
     @GetMapping("/me")
     public AuthModels.UserResponse currentUser(@AuthenticationPrincipal Jwt jwt) {
         return authService.getUser(UUID.fromString(jwt.getSubject()));
+    }
+
+    private void checkRateLimit(HttpServletRequest request) {
+        if (!rateLimiter.allow("auth:" + request.getRemoteAddr())) {
+            throw new RateLimitException("Too many authentication attempts. Try again in a minute.");
+        }
     }
 }

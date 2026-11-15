@@ -6,6 +6,6 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProjectRepository extends JpaRepository<ProjectEntity, UUID> {
-    List<ProjectEntity> findAllByUserIdOrderByUpdatedAtDesc(UUID userId);
+    List<ProjectEntity> findTop100ByUserIdOrderByUpdatedAtDesc(UUID userId);
     Optional<ProjectEntity> findByIdAndUserId(UUID id, UUID userId);
 }

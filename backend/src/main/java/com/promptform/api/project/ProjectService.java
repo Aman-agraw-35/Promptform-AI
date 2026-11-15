@@ -1,6 +1,9 @@
 package com.promptform.api.project;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.promptform.api.generation.GenerationModels.UiSchema;
+import com.promptform.api.generation.SchemaValidator;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -9,12 +12,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProjectService {
+    private static final int MAX_SCHEMA_BYTES = 200_000;
     private final ProjectRepository projectRepository;
     private final VersionRepository versionRepository;
+    private final ObjectMapper objectMapper;
+    private final SchemaValidator schemaValidator;
 
-    public ProjectService(ProjectRepository projectRepository, VersionRepository versionRepository) {
+    public ProjectService(ProjectRepository projectRepository, VersionRepository versionRepository,
+                          ObjectMapper objectMapper, SchemaValidator schemaValidator) {
         this.projectRepository = projectRepository;
         this.versionRepository = versionRepository;
+        this.objectMapper = objectMapper;
+        this.schemaValidator = schemaValidator;
     }
 
     @Transactional
@@ -25,7 +34,7 @@ public class ProjectService {
 
     @Transactional(readOnly = true)
     public List<ProjectModels.ProjectResponse> listProjects(UUID userId) {
-        return projectRepository.findAllByUserIdOrderByUpdatedAtDesc(userId).stream()
+        return projectRepository.findTop100ByUserIdOrderByUpdatedAtDesc(userId).stream()
                 .map(this::toProjectResponse)
                 .toList();
     }
@@ -34,7 +43,7 @@ public class ProjectService {
     public ProjectModels.ProjectDetails getProject(UUID userId, UUID projectId) {
         ProjectEntity project = findOwnedProject(userId, projectId);
         List<ProjectModels.VersionResponse> versions = versionRepository
-                .findAllByProjectIdOrderByCreatedAtDesc(projectId).stream()
+                .findTop100ByProjectIdOrderByCreatedAtDesc(projectId).stream()
                 .map(this::toVersionResponse)
                 .toList();
         return new ProjectModels.ProjectDetails(toProjectResponse(project), versions);
@@ -44,6 +53,7 @@ public class ProjectService {
     public ProjectModels.VersionResponse createVersion(UUID userId, UUID projectId,
                                                        ProjectModels.CreateVersionRequest request) {
         ProjectEntity project = findOwnedProject(userId, projectId);
+        validateSchema(request.schema());
         if (request.parentVersionId() != null
                 && versionRepository.findByIdAndProjectId(request.parentVersionId(), projectId).isEmpty()) {
             throw new ProjectException("The parent version does not belong to this project.");
@@ -60,6 +70,20 @@ public class ProjectService {
     private ProjectEntity findOwnedProject(UUID userId, UUID projectId) {
         return projectRepository.findByIdAndUserId(projectId, userId)
                 .orElseThrow(() -> new ProjectException("Project was not found."));
+    }
+
+    private void validateSchema(JsonNode schemaJson) {
+        if (schemaJson.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > MAX_SCHEMA_BYTES) {
+            throw new ProjectValidationException("The form schema is too large.");
+        }
+        try {
+            UiSchema schema = objectMapper.treeToValue(schemaJson, UiSchema.class);
+            schemaValidator.validate(schema);
+        } catch (ProjectValidationException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            throw new ProjectValidationException("The form schema is invalid.");
+        }
     }
 
     private ProjectModels.ProjectResponse toProjectResponse(ProjectEntity project) {

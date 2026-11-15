@@ -8,11 +8,14 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.springframework.scheduling.annotation.Async;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EvalExecutionService {
     private static final int MAX_ERROR_LENGTH = 500;
+    private static final Logger logger = LoggerFactory.getLogger(EvalExecutionService.class);
     private final EvalRunRepository runRepository;
     private final EvalResultRepository resultRepository;
     private final GenerationService generationService;
@@ -30,8 +33,17 @@ public class EvalExecutionService {
     public void execute(UUID runId, List<EvalCase> cases) {
         EvalRunEntity run = runRepository.findById(runId)
                 .orElseThrow(() -> new EvalException("Evaluation run was not found."));
-        int passedCases = 0;
+        try {
+            executeCases(runId, cases, run);
+        } catch (RuntimeException exception) {
+            run.fail(shorten(exception.getMessage()), Instant.now());
+            runRepository.save(run);
+            logger.error("Evaluation run {} failed unexpectedly", runId, exception);
+        }
+    }
 
+    private void executeCases(UUID runId, List<EvalCase> cases, EvalRunEntity run) {
+        int passedCases = 0;
         for (EvalCase testCase : cases) {
             long startedAt = System.nanoTime();
             EvalScore score;
@@ -49,7 +61,7 @@ public class EvalExecutionService {
                     score.requirementScore(), score.passed(), elapsedMillis(startedAt), errorMessage, Instant.now()));
         }
 
-        BigDecimal passRate = BigDecimal.valueOf(passedCases)
+        BigDecimal passRate = cases.isEmpty() ? BigDecimal.ZERO : BigDecimal.valueOf(passedCases)
                 .divide(BigDecimal.valueOf(cases.size()), 4, java.math.RoundingMode.HALF_UP);
         run.complete(passedCases, passRate, Instant.now());
         runRepository.save(run);

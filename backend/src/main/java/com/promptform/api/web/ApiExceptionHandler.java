@@ -4,11 +4,13 @@ import com.promptform.api.auth.AuthException;
 import com.promptform.api.eval.EvalException;
 import com.promptform.api.generation.GenerationException;
 import com.promptform.api.project.ProjectException;
+import com.promptform.api.project.ProjectValidationException;
 import com.promptform.api.ratelimit.RateLimitException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -25,6 +27,13 @@ public class ApiExceptionHandler {
     public ProblemDetail handleProject(ProjectException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
         problem.setTitle("Project request failed");
+        return problem;
+    }
+
+    @ExceptionHandler(ProjectValidationException.class)
+    public ProblemDetail handleProjectValidation(ProjectValidationException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+        problem.setTitle("Invalid project data");
         return problem;
     }
 
@@ -58,8 +67,15 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidation(MethodArgumentNotValidException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Prompt must be between 1 and 2,000 characters.");
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "The request contains invalid or missing fields.");
         problem.setTitle("Invalid request");
+        return problem;
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleMalformedJson(HttpMessageNotReadableException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "The request body must contain valid JSON.");
+        problem.setTitle("Malformed request");
         return problem;
     }
 }
