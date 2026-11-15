@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,6 +17,7 @@ public class InMemoryRateLimiter implements RateLimiter {
     private final Clock clock;
     private final Map<String, Window> windows = new HashMap<>();
 
+    @Autowired
     public InMemoryRateLimiter(RateLimitProperties properties) {
         this(properties, Clock.systemUTC());
     }

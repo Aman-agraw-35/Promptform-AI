@@ -1,6 +1,9 @@
 package com.promptform.api.auth;
 
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.OctetSequenceKey;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import javax.crypto.SecretKey;
@@ -48,7 +51,10 @@ public class SecurityConfig {
 
     @Bean
     JwtEncoder jwtEncoder(SecretKey jwtSecretKey) {
-        return new NimbusJwtEncoder(new ImmutableSecret<>(jwtSecretKey));
+        OctetSequenceKey signingKey = new OctetSequenceKey.Builder(jwtSecretKey)
+                .algorithm(JWSAlgorithm.HS256)
+                .build();
+        return new NimbusJwtEncoder(new ImmutableJWKSet<>(new JWKSet(signingKey)));
     }
 
     @Bean

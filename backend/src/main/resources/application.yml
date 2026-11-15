@@ -16,8 +16,13 @@ spring:
     locations: classpath:db/migration
   data:
     redis:
+      repositories:
+        enabled: false
       url: ${REDIS_URL:redis://localhost:6379}
 management:
+  health:
+    redis:
+      enabled: ${REDIS_ENABLED:false}
   endpoints:
     web:
       exposure:
@@ -35,7 +40,7 @@ promptform:
   llm:
     provider: ${PROMPTFORM_LLM_PROVIDER:demo}
     gemini-api-key: ${GEMINI_API_KEY:}
-    model: ${GEMINI_MODEL:gemini-3.5-flash}
+    model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
     timeout-seconds: ${GEMINI_TIMEOUT_SECONDS:30}
     cost-per-million-tokens: ${GEMINI_COST_PER_MILLION_TOKENS:0}
   auth:
