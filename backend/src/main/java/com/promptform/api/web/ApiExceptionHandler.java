@@ -1,6 +1,7 @@
 package com.promptform.api.web;
 
 import com.promptform.api.auth.AuthException;
+import com.promptform.api.eval.EvalException;
 import com.promptform.api.generation.GenerationException;
 import com.promptform.api.project.ProjectException;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(EvalException.class)
+    public ProblemDetail handleEval(EvalException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+        problem.setTitle("Evaluation request failed");
+        return problem;
+    }
+
     @ExceptionHandler(ProjectException.class)
     public ProblemDetail handleProject(ProjectException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());

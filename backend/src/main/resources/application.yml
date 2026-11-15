@@ -18,13 +18,14 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus
 promptform:
   llm:
     provider: ${PROMPTFORM_LLM_PROVIDER:demo}
     gemini-api-key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemini-3.5-flash}
     timeout-seconds: ${GEMINI_TIMEOUT_SECONDS:30}
+    cost-per-million-tokens: ${GEMINI_COST_PER_MILLION_TOKENS:0}
   auth:
     jwt-secret: ${JWT_SECRET:}
     access-token-minutes: ${JWT_ACCESS_TOKEN_MINUTES:60}

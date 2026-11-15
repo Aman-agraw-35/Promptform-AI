@@ -2,7 +2,9 @@ package com.promptform.api.generation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.promptform.api.generation.GenerationModels.UiSchema;
+import com.promptform.api.observability.GenerationMetrics;
 import org.springframework.stereotype.Service;
+import io.micrometer.core.instrument.Timer;
 
 @Service
 public class GenerationService {
@@ -11,25 +13,43 @@ public class GenerationService {
     private final LLMProvider provider;
     private final ObjectMapper objectMapper;
     private final SchemaValidator validator;
+    private final GenerationMetrics metrics;
 
-    public GenerationService(LLMProvider provider, ObjectMapper objectMapper, SchemaValidator validator) {
+    public GenerationService(LLMProvider provider, ObjectMapper objectMapper, SchemaValidator validator,
+                             GenerationMetrics metrics) {
         this.provider = provider;
         this.objectMapper = objectMapper;
         this.validator = validator;
+        this.metrics = metrics;
     }
 
     public UiSchema generate(String prompt) {
+        Timer.Sample sample = metrics.start();
         String currentPrompt = prompt;
         String lastResponse = "";
-        for (int attempt = 0; attempt <= MAX_REPAIR_ATTEMPTS; attempt++) {
-            lastResponse = provider.generate(currentPrompt);
-            try {
-                UiSchema schema = parseAndValidate(lastResponse);
-                return schema;
-            } catch (GenerationException exception) {
-                if (attempt == MAX_REPAIR_ATTEMPTS) throw new GenerationException("The model could not produce a valid form after repair attempts.", exception);
-                currentPrompt = repairPrompt(prompt, lastResponse, exception.getMessage());
+        int repairAttempts = 0;
+        long totalTokens = 0;
+        try {
+            for (int attempt = 0; attempt <= MAX_REPAIR_ATTEMPTS; attempt++) {
+                LLMGenerationResponse response = provider.generateResponse(currentPrompt);
+                lastResponse = response.text();
+                totalTokens += response.totalTokens();
+                try {
+                    UiSchema schema = parseAndValidate(lastResponse);
+                    metrics.recordTokenUsage(totalTokens);
+                    metrics.recordSuccess(sample, repairAttempts);
+                    return schema;
+                } catch (GenerationException exception) {
+                    if (attempt == MAX_REPAIR_ATTEMPTS) {
+                        throw new GenerationException("The model could not produce a valid form after repair attempts.", exception);
+                    }
+                    repairAttempts++;
+                    currentPrompt = repairPrompt(prompt, lastResponse, exception.getMessage());
+                }
             }
+        } catch (RuntimeException exception) {
+            metrics.recordFailure(sample, repairAttempts);
+            throw exception;
         }
         throw new GenerationException("The model could not produce a valid form.");
     }

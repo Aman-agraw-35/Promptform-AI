@@ -30,6 +30,11 @@ public class GeminiLLMProvider implements LLMProvider {
 
     @Override
     public String generate(String prompt) {
+        return generateResponse(prompt).text();
+    }
+
+    @Override
+    public LLMGenerationResponse generateResponse(String prompt) {
         if (apiKey.isBlank()) throw new GenerationException("Gemini is enabled but GEMINI_API_KEY is missing.");
         try {
             String body = objectMapper.writeValueAsString(new GeminiRequest(new GeminiContent[]{new GeminiContent(new GeminiPart[]{new GeminiPart(systemPrompt(prompt))})}, new GenerationConfig("application/json", responseSchema())));
@@ -39,7 +44,9 @@ public class GeminiLLMProvider implements LLMProvider {
             JsonNode root = objectMapper.readTree(response.body());
             String text = root.at("/candidates/0/content/parts/0/text").asText();
             if (text.isBlank()) throw new GenerationException("Gemini returned an empty result.");
-            return text;
+            JsonNode usage = root.path("usageMetadata");
+            return new LLMGenerationResponse(text, usage.path("promptTokenCount").asLong(0),
+                    usage.path("candidatesTokenCount").asLong(0), usage.path("totalTokenCount").asLong(0));
         } catch (GenerationException exception) {
             throw exception;
         } catch (Exception exception) {
