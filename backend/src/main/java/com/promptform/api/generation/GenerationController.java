@@ -15,12 +15,15 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.Map;
 import java.util.concurrent.Executor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.promptform.api.generation.GenerationModels.GenerateRequest;
 
 @RestController
 @RequestMapping("/api")
 public class GenerationController {
+    private static final Logger logger = LoggerFactory.getLogger(GenerationController.class);
     private final GenerationService service;
     private final Executor generationExecutor;
     private final RateLimiter rateLimiter;
@@ -37,15 +40,22 @@ public class GenerationController {
                                Principal principal) {
         String identity = principal == null ? httpRequest.getRemoteAddr() : principal.getName();
         if (!rateLimiter.allow("generation:" + identity)) {
+            logger.warn("Generation rejected by rate limiter identity={}", identity);
             throw new RateLimitException("Generation rate limit reached. Try again in a minute.");
         }
+        String requestId = java.util.UUID.randomUUID().toString();
+        logger.info("Generation request accepted requestId={} promptChars={} identity={}", requestId, request.prompt().length(), identity);
         SseEmitter emitter = new SseEmitter(60_000L);
         generationExecutor.execute(() -> {
             try {
+                logger.info("Generation started requestId={}", requestId);
                 send(emitter, "progress", Map.of("message", "Validating the form schema…"));
                 send(emitter, "result", Map.of("schema", service.generate(request.prompt())));
+                logger.info("Generation completed requestId={}", requestId);
                 emitter.complete();
             } catch (Exception exception) {
+                logger.error("Generation failed requestId={} type={} message={}", requestId,
+                        exception.getClass().getSimpleName(), exception.getMessage());
                 try {
                     send(emitter, "error", Map.of("message", safeErrorMessage(exception)));
                 } catch (IOException ignored) {

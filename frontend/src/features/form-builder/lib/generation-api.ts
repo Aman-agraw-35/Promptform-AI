@@ -6,16 +6,22 @@ type StreamEvent = {
 };
 
 export async function generateSchema(prompt: string, onEvent: (event: StreamEvent) => void) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/generate`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
-    },
-  );
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/generate`;
+  console.info("[promptform] generation request started", { apiUrl, promptChars: prompt.length });
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt }),
+  });
 
-  if (!response.ok || !response.body) throw new Error("The generation service is unavailable.");
+  console.info("[promptform] generation response received", {
+    status: response.status,
+    contentType: response.headers.get("content-type"),
+  });
+  if (!response.ok || !response.body) {
+    console.error("[promptform] generation request failed before SSE", { status: response.status });
+    throw new Error("The generation service is unavailable.");
+  }
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
@@ -29,8 +35,13 @@ export async function generateSchema(prompt: string, onEvent: (event: StreamEven
     for (const message of messages) {
       const event = message.match(/^event: (.+)$/m)?.[1] ?? "message";
       const data = message.match(/^data: (.+)$/m)?.[1];
-      if (data) onEvent({ event, data: JSON.parse(data) });
+      if (data) {
+        const parsedData = JSON.parse(data);
+        console.info("[promptform] generation SSE event", { event, data: parsedData });
+        onEvent({ event, data: parsedData });
+      }
     }
     if (done) break;
   }
+  console.info("[promptform] generation stream closed");
 }

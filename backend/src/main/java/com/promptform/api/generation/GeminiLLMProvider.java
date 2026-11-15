@@ -12,6 +12,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.Instant;
 
 @Component
 @ConditionalOnProperty(name = "promptform.llm.provider", havingValue = "gemini")
@@ -42,9 +43,12 @@ public class GeminiLLMProvider implements LLMProvider {
     public LLMGenerationResponse generateResponse(String prompt) {
         if (apiKey.isBlank()) throw new GenerationException("Gemini is enabled but GEMINI_API_KEY is missing.");
         try {
+            logger.info("Gemini request started model={} promptChars={}", model, prompt.length());
+            Instant startedAt = Instant.now();
             String body = objectMapper.writeValueAsString(new GeminiRequest(new GeminiContent[]{new GeminiContent(new GeminiPart[]{new GeminiPart(systemPrompt(prompt))})}, new GenerationConfig("application/json", responseSchema())));
             HttpRequest request = HttpRequest.newBuilder(URI.create("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent")).timeout(timeout).header("Content-Type", "application/json").header("x-goog-api-key", apiKey).POST(HttpRequest.BodyPublishers.ofString(body)).build();
             HttpResponse<String> response = sendWithRetry(request);
+            logger.info("Gemini response received model={} status={} durationMs={}", model, response.statusCode(), Duration.between(startedAt, Instant.now()).toMillis());
             if (response.statusCode() / 100 != 2) {
                 logger.error("Gemini request failed with HTTP status {}", response.statusCode());
                 if (response.statusCode() == 503) {
@@ -55,6 +59,7 @@ public class GeminiLLMProvider implements LLMProvider {
             JsonNode root = objectMapper.readTree(response.body());
             String text = root.at("/candidates/0/content/parts/0/text").asText();
             if (text.isBlank()) throw new GenerationException("Gemini returned an empty result.");
+            logger.debug("Gemini returned non-empty response chars={}", text.length());
             JsonNode usage = root.path("usageMetadata");
             return new LLMGenerationResponse(text, usage.path("promptTokenCount").asLong(0),
                     usage.path("candidatesTokenCount").asLong(0), usage.path("totalTokenCount").asLong(0));

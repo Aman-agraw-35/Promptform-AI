@@ -23,13 +23,21 @@ export function PromptWorkbench() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   async function handleGenerate() {
-    if (!prompt.trim() || isGenerating) return;
+    if (!prompt.trim() || isGenerating) {
+      console.debug("[promptform] generation click ignored", {
+        hasPrompt: Boolean(prompt.trim()),
+        isGenerating,
+      });
+      return;
+    }
+    console.info("[promptform] build form clicked", { promptChars: prompt.trim().length });
     setError(null);
     setIsGenerating(true);
     setStatus("Reading your brief...");
 
     try {
       await generateSchema(prompt, (event) => {
+        console.info("[promptform] generation event handled", { event: event.event });
         if (event.event === "progress" && event.data.message) setStatus(event.data.message);
         if (event.event === "error") throw new Error(event.data.message ?? "Generation failed.");
         if (event.event === "result" && event.data.schema) {
@@ -38,6 +46,7 @@ export function PromptWorkbench() {
         }
       });
     } catch (generationError) {
+      console.error("[promptform] generation failed", generationError);
       setStatus("Build interrupted");
       setError(
         generationError instanceof Error ? generationError.message : "Something went wrong.",

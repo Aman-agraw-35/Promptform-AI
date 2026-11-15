@@ -5,6 +5,8 @@ import com.promptform.api.config.PromptCacheProperties;
 import com.promptform.api.generation.GenerationModels.UiSchema;
 import com.promptform.api.observability.GenerationMetrics;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import io.micrometer.core.instrument.Timer;
 
 import java.time.Duration;
@@ -14,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class GenerationService {
+    private static final Logger logger = LoggerFactory.getLogger(GenerationService.class);
     private static final int MAX_REPAIR_ATTEMPTS = 2;
     private static final int MAX_REPAIR_RESPONSE_LENGTH = 8_000;
     private final LLMProvider provider;
@@ -34,8 +37,12 @@ public class GenerationService {
 
     public UiSchema generate(String prompt) {
         String normalizedPrompt = normalizePrompt(prompt);
+        logger.info("Generation service started provider={} promptChars={}", provider.getClass().getSimpleName(), normalizedPrompt.length());
         UiSchema cachedSchema = getCached(normalizedPrompt);
-        if (cachedSchema != null) return cachedSchema;
+        if (cachedSchema != null) {
+            logger.info("Returning cached form schema promptChars={}", normalizedPrompt.length());
+            return cachedSchema;
+        }
         Timer.Sample sample = metrics.start();
         String currentPrompt = normalizedPrompt;
         String lastResponse = "";
@@ -44,17 +51,21 @@ public class GenerationService {
         long totalTokens = 0;
         try {
             for (int attempt = 0; attempt <= MAX_REPAIR_ATTEMPTS; attempt++) {
+                logger.info("Calling model attempt={} repairAttempt={}", attempt + 1, repairAttempts);
                 LLMGenerationResponse response = provider.generateResponse(currentPrompt);
                 lastResponse = response.text();
                 totalTokens += response.totalTokens();
+                logger.info("Model response received chars={} tokens={}", lastResponse == null ? 0 : lastResponse.length(), response.totalTokens());
                 try {
                     UiSchema schema = parseAndValidate(lastResponse);
+                    logger.info("Model response parsed and validated fields={}", schema.children().size());
                     metrics.recordTokenUsage(totalTokens);
                     metrics.recordSuccess(sample, repairAttempts);
                     cache(normalizedPrompt, schema);
                     return schema;
                 } catch (GenerationException exception) {
                     lastIssue = exception.getMessage() == null ? lastIssue : exception.getMessage();
+                    logger.warn("Model response rejected attempt={} reason={}", attempt + 1, lastIssue);
                     if (attempt == MAX_REPAIR_ATTEMPTS) {
                         throw new GenerationException("The model could not produce a valid form: " + lastIssue, exception);
                     }
