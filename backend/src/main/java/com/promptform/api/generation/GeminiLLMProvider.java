@@ -16,6 +16,8 @@ import java.time.Duration;
 @Component
 @ConditionalOnProperty(name = "promptform.llm.provider", havingValue = "gemini")
 public class GeminiLLMProvider implements LLMProvider {
+    private static final int MAX_ATTEMPTS = 3;
+    private static final long RETRY_DELAY_MILLIS = 500;
     private static final Logger logger = LoggerFactory.getLogger(GeminiLLMProvider.class);
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
@@ -42,9 +44,12 @@ public class GeminiLLMProvider implements LLMProvider {
         try {
             String body = objectMapper.writeValueAsString(new GeminiRequest(new GeminiContent[]{new GeminiContent(new GeminiPart[]{new GeminiPart(systemPrompt(prompt))})}, new GenerationConfig("application/json", responseSchema())));
             HttpRequest request = HttpRequest.newBuilder(URI.create("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent")).timeout(timeout).header("Content-Type", "application/json").header("x-goog-api-key", apiKey).POST(HttpRequest.BodyPublishers.ofString(body)).build();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = sendWithRetry(request);
             if (response.statusCode() / 100 != 2) {
                 logger.error("Gemini request failed with HTTP status {}", response.statusCode());
+                if (response.statusCode() == 503) {
+                    throw new GenerationException("Gemini is temporarily unavailable. Please try again in a moment.");
+                }
                 throw new GenerationException("Gemini generation failed with HTTP " + response.statusCode() + ".");
             }
             JsonNode root = objectMapper.readTree(response.body());
@@ -58,6 +63,23 @@ public class GeminiLLMProvider implements LLMProvider {
         } catch (Exception exception) {
             throw new GenerationException("Gemini generation failed.", exception);
         }
+    }
+
+    private HttpResponse<String> sendWithRetry(HttpRequest request) throws Exception {
+        HttpResponse<String> response = null;
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 503 || attempt == MAX_ATTEMPTS) return response;
+            long delay = RETRY_DELAY_MILLIS * attempt;
+            logger.warn("Gemini is temporarily unavailable; retrying in {} ms", delay);
+            try {
+                Thread.sleep(delay);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                throw exception;
+            }
+        }
+        return response;
     }
 
     private String systemPrompt(String prompt) {

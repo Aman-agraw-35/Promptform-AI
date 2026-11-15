@@ -10,7 +10,7 @@ import java.time.Duration;
 public class GeminiProperties {
     private String provider = "demo";
     private String geminiApiKey = "";
-    private String model = "gemini-3.5-flash";
+    private String model = "gemini-3.5-flash-lite";
     private long timeoutSeconds = 30;
     private double costPerMillionTokens = 0;
     public String provider() { return provider; }
