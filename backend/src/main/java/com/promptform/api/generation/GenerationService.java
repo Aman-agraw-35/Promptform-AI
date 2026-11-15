@@ -39,6 +39,7 @@ public class GenerationService {
         Timer.Sample sample = metrics.start();
         String currentPrompt = normalizedPrompt;
         String lastResponse = "";
+        String lastIssue = "unknown validation error";
         int repairAttempts = 0;
         long totalTokens = 0;
         try {
@@ -53,8 +54,9 @@ public class GenerationService {
                     cache(normalizedPrompt, schema);
                     return schema;
                 } catch (GenerationException exception) {
+                    lastIssue = exception.getMessage() == null ? lastIssue : exception.getMessage();
                     if (attempt == MAX_REPAIR_ATTEMPTS) {
-                        throw new GenerationException("The model could not produce a valid form after repair attempts.", exception);
+                        throw new GenerationException("The model could not produce a valid form: " + lastIssue, exception);
                     }
                     repairAttempts++;
                     currentPrompt = repairPrompt(normalizedPrompt, lastResponse, exception.getMessage());

@@ -83,7 +83,7 @@ public class GeminiLLMProvider implements LLMProvider {
     }
 
     private String systemPrompt(String prompt) {
-        return "Generate a form schema matching the response schema exactly. Return at least one child field. Supported node types are text, number, textarea, select, radio, and checkboxGroup. Every field needs a unique name and label. Option fields require options with value and label. Use visibleWhen with a field and equals when a field is conditional. Use validation for min, max, or pattern rules. Do not include HTML, code, markdown, explanations, or an outer wrapper. User request: " + prompt;
+        return "Generate a form schema matching the response schema exactly. Return at least one child field. Use only these node types: text, number, textarea, select, radio, checkboxGroup. Do not use email, date, file, section, columns, or any other type. Every field needs a unique name and label. Select, radio, and checkboxGroup fields require options with value and label. Use visibleWhen with a field and equals when a field is conditional. Use validation only for min, max, or pattern rules. Do not include HTML, code, markdown, explanations, or an outer wrapper. User request: " + prompt;
     }
 
     private JsonNode responseSchema() throws Exception {
