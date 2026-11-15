@@ -69,7 +69,6 @@ public class GeminiLLMProvider implements LLMProvider {
                       "label": {"type": "string"},
                       "description": {"type": "string"},
                       "required": {"type": "boolean"},
-                      "defaultValue": {"type": ["string", "number", "boolean", "null"]},
                       "visibleWhen": {
                         "type": "object",
                         "properties": {
