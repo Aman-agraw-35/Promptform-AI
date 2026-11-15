@@ -89,6 +89,17 @@ export function PromptWorkbench() {
           </p>
           <span className="intro-index">PROMPTFORM / 2026</span>
         </div>
+        <div className="studio-rail" aria-label="Studio capabilities">
+          <span>
+            <b>01</b> natural language
+          </span>
+          <span>
+            <b>02</b> validated schema
+          </span>
+          <span>
+            <b>03</b> live interface
+          </span>
+        </div>
       </section>
 
       <section className="workbench" aria-label="Promptform builder">
@@ -172,9 +183,14 @@ export function PromptWorkbench() {
               <p className="empty-title">
                 Your interface
                 <br />
-                <em>starts here.</em>
+                starts here.
               </p>
               <span className="empty-copy">A validated form will appear in this space.</span>
+              <div className="empty-tags">
+                <span>JSON</span>
+                <span>SAFE</span>
+                <span>READY</span>
+              </div>
               <div className="empty-footnote">
                 <span />
                 <span>waiting for a brief</span>
