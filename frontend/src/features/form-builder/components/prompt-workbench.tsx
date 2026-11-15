@@ -65,6 +65,9 @@ export function PromptWorkbench() {
           <span>promptform</span>
         </Link>
         <div className="topbar-meta">
+          <Link className="topbar-evals" href="/evals">
+            quality / evals ↗
+          </Link>
           <span className="availability">
             <i /> online
           </span>
