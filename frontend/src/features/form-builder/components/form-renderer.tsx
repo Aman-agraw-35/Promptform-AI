@@ -21,7 +21,7 @@ async function readApiError(response: Response, fallback: string) {
 
 async function approveForm(schema: UiSchema) {
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/forms`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ schema }),
+    method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ schema }),
   });
   if (!response.ok) throw await readApiError(response, "The form could not be approved.");
   return response.json() as Promise<ApprovedForm>;
@@ -29,7 +29,7 @@ async function approveForm(schema: UiSchema) {
 
 async function saveSubmission(formId: string, values: FormValues) {
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/forms/${formId}/submissions`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ values }),
+    method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ values }),
   });
   if (!response.ok) throw await readApiError(response, "The form submission could not be saved.");
   return response.json() as Promise<{ id: string; submittedAt: string }>;

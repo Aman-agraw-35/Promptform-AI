@@ -77,6 +77,9 @@ export function PromptWorkbench() {
           <Link className="topbar-evals" href="/evals">
             quality / evals ↗
           </Link>
+          <Link className="topbar-evals" href="/login">
+            sign in ↗
+          </Link>
           <span className="availability">
             <i /> online
           </span>

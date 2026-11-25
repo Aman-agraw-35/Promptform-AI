@@ -35,8 +35,8 @@ export function AdminFormPage({ formId }: { formId: string }) {
     setError(null);
     try {
       const [formResponse, submissionsResponse] = await Promise.all([
-        fetch(`${apiBase}/api/forms/${formId}`),
-        fetch(`${apiBase}/api/forms/${formId}/submissions`),
+        fetch(`${apiBase}/api/forms/${formId}`, { credentials: "include" }),
+        fetch(`${apiBase}/api/forms/${formId}/submissions`, { credentials: "include" }),
       ]);
       if (!formResponse.ok || !submissionsResponse.ok) throw new Error("The form responses could not be loaded.");
       setForm(await formResponse.json() as FormResponse);
