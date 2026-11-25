@@ -2,10 +2,12 @@ package com.promptform.api.web;
 
 import com.promptform.api.auth.AuthException;
 import com.promptform.api.eval.EvalException;
+import com.promptform.api.form.FormException;
 import com.promptform.api.generation.GenerationException;
 import com.promptform.api.project.ProjectException;
 import com.promptform.api.project.ProjectValidationException;
 import com.promptform.api.ratelimit.RateLimitException;
+import com.promptform.api.submission.SubmissionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -62,6 +64,20 @@ public class ApiExceptionHandler {
     public ProblemDetail handleRateLimit(RateLimitException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage());
         problem.setTitle("Too many requests");
+        return problem;
+    }
+
+    @ExceptionHandler(SubmissionException.class)
+    public ProblemDetail handleSubmission(SubmissionException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+        problem.setTitle("Form submission failed");
+        return problem;
+    }
+
+    @ExceptionHandler(FormException.class)
+    public ProblemDetail handleForm(FormException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+        problem.setTitle("Form request failed");
         return problem;
     }
 
