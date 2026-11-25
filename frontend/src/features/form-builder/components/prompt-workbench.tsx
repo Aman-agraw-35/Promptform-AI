@@ -82,7 +82,6 @@ export function PromptWorkbench() {
           <span className="availability">
             <i /> online
           </span>
-          <span className="topbar-note">AI form studio / 01</span>
         </div>
       </header>
 
