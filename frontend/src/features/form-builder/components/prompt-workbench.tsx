@@ -5,6 +5,7 @@ import { useState } from "react";
 import { FormRenderer } from "@/features/form-builder/components/form-renderer";
 import { generateSchema } from "@/features/form-builder/lib/generation-api";
 import type { UiSchema } from "@/features/form-builder/lib/schema";
+import { ProfileMenu } from "@/features/auth/components/profile-menu";
 
 const starterPrompt =
   "Create an insurance claim form with the customer's name, email, vehicle type, and incident description.";
@@ -77,9 +78,7 @@ export function PromptWorkbench() {
           <Link className="topbar-evals" href="/evals">
             quality / evals ↗
           </Link>
-          <Link className="topbar-evals" href="/login">
-            sign in ↗
-          </Link>
+          <ProfileMenu />
           <span className="availability">
             <i /> online
           </span>
