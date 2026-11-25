@@ -184,7 +184,7 @@ export function PromptWorkbench() {
             </div>
           </div>
           {schema ? (
-            <FormRenderer schema={schema} />
+            <FormRenderer mode="builder" schema={schema} onSchemaChange={setSchema} />
           ) : (
             <div className="empty-preview">
               <div className="preview-orbit" aria-hidden="true">

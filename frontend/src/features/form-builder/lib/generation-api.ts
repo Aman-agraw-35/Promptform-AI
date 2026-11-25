@@ -33,8 +33,8 @@ export async function generateSchema(prompt: string, onEvent: (event: StreamEven
     const messages = buffer.split("\n\n");
     buffer = messages.pop() ?? "";
     for (const message of messages) {
-      const event = message.match(/^event: (.+)$/m)?.[1] ?? "message";
-      const data = message.match(/^data: (.+)$/m)?.[1];
+      const event = message.match(/^event:\s*(.+)$/m)?.[1] ?? "message";
+      const data = message.match(/^data:\s*(.+)$/m)?.[1];
       if (data) {
         const parsedData = JSON.parse(data);
         console.info("[promptform] generation SSE event", { event, data: parsedData });
