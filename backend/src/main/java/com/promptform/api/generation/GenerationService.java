@@ -56,6 +56,7 @@ public class GenerationService {
                 lastResponse = response.text();
                 totalTokens += response.totalTokens();
                 logger.info("Model response received chars={} tokens={}", lastResponse == null ? 0 : lastResponse.length(), response.totalTokens());
+                logger.info("Model raw output:\n{}", logOutput(lastResponse));
                 try {
                     UiSchema schema = parseAndValidate(lastResponse);
                     logger.info("Model response parsed and validated fields={}", schema.children().size());
@@ -137,6 +138,12 @@ public class GenerationService {
         int objectEnd = normalized.lastIndexOf('}');
         if (objectStart < 0 || objectEnd <= objectStart) throw new GenerationException("The model returned invalid JSON.");
         return normalized.substring(objectStart, objectEnd + 1);
+    }
+
+    private String logOutput(String response) {
+        if (response == null) return "<null>";
+        if (response.length() <= MAX_REPAIR_RESPONSE_LENGTH) return response;
+        return response.substring(0, MAX_REPAIR_RESPONSE_LENGTH) + "\n<output truncated>";
     }
 
     private record CacheEntry(Instant createdAt, UiSchema schema) {}
