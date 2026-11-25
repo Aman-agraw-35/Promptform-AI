@@ -60,6 +60,14 @@ public class AuthService {
                 .orElseThrow(() -> new AuthException("User account was not found."));
     }
 
+    public long accessTokenLifetimeSeconds() {
+        return authProperties.accessTokenMinutes() * 60;
+    }
+
+    public boolean secureCookie() {
+        return authProperties.secureCookie();
+    }
+
     private AuthModels.AuthResponse createResponse(UserEntity user) {
         Instant issuedAt = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()

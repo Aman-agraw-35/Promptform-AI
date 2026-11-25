@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/forms")
@@ -21,6 +22,7 @@ public class FormController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("isAuthenticated()")
     public FormModels.FormResponse approve(@Valid @RequestBody FormModels.ApproveFormRequest request) {
         return formService.approve(request);
     }
@@ -31,6 +33,7 @@ public class FormController {
     }
 
     @GetMapping("/{formId}/submissions")
+    @PreAuthorize("isAuthenticated()")
     public List<FormModels.SubmissionDetails> submissions(@PathVariable UUID formId) {
         return formService.listSubmissions(formId);
     }
