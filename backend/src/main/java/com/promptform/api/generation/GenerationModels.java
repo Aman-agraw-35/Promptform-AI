@@ -12,6 +12,6 @@ public final class GenerationModels {
     public record FormOption(String value, String label) {}
     public record VisibleWhen(String field, String equals, String notEquals, List<String> in) {}
     public record ValidationRules(Double min, Double max, String pattern) {}
-    public record UiNode(String type, String name, String label, String description, Boolean required, Object defaultValue, List<FormOption> options, List<UiNode> children, VisibleWhen visibleWhen, ValidationRules validation) {}
+    public record UiNode(String type, String name, String label, String description, Boolean required, Boolean unique, Object defaultValue, List<FormOption> options, List<UiNode> children, VisibleWhen visibleWhen, ValidationRules validation) {}
     public record UiSchema(String title, String description, List<UiNode> children) {}
 }

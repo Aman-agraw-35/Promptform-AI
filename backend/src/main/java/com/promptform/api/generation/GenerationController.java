@@ -45,7 +45,7 @@ public class GenerationController {
         }
         String requestId = java.util.UUID.randomUUID().toString();
         logger.info("Generation request accepted requestId={} promptChars={} identity={}", requestId, request.prompt().length(), identity);
-        SseEmitter emitter = new SseEmitter(60_000L);
+        SseEmitter emitter = new SseEmitter(180_000L);
         generationExecutor.execute(() -> {
             try {
                 logger.info("Generation started requestId={}", requestId);

@@ -45,7 +45,7 @@ public class GeminiLLMProvider implements LLMProvider {
         try {
             logger.info("Gemini request started model={} promptChars={}", model, prompt.length());
             Instant startedAt = Instant.now();
-            String body = objectMapper.writeValueAsString(new GeminiRequest(new GeminiContent[]{new GeminiContent(new GeminiPart[]{new GeminiPart(systemPrompt(prompt))})}, new GenerationConfig("application/json", responseSchema())));
+            String body = objectMapper.writeValueAsString(new GeminiRequest(new GeminiContent[]{new GeminiContent(new GeminiPart[]{new GeminiPart(systemPrompt(prompt))})}, new GenerationConfig("application/json", responseSchema(), 2048)));
             HttpRequest request = HttpRequest.newBuilder(URI.create("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent")).timeout(timeout).header("Content-Type", "application/json").header("x-goog-api-key", apiKey).POST(HttpRequest.BodyPublishers.ofString(body)).build();
             HttpResponse<String> response = sendWithRetry(request);
             logger.info("Gemini response received model={} status={} durationMs={}", model, response.statusCode(), Duration.between(startedAt, Instant.now()).toMillis());
@@ -53,6 +53,10 @@ public class GeminiLLMProvider implements LLMProvider {
                 logger.error("Gemini request failed with HTTP status {}", response.statusCode());
                 if (response.statusCode() == 503) {
                     throw new GenerationException("Gemini is temporarily unavailable. Please try again in a moment.");
+                }
+                if (response.statusCode() == 429) {
+                    logger.warn("Gemini quota or rate limit reached responseBody={}", response.body());
+                    throw new GenerationException("Gemini quota or rate limit reached. Wait and try again, or check the project limits in Google AI Studio.");
                 }
                 throw new GenerationException("Gemini generation failed with HTTP " + response.statusCode() + ".");
             }
@@ -66,7 +70,11 @@ public class GeminiLLMProvider implements LLMProvider {
         } catch (GenerationException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new GenerationException("Gemini generation failed.", exception);
+            logger.error("Gemini request crashed type={} message={}",
+                    exception.getClass().getSimpleName(), exception.getMessage(), exception);
+            String detail = exception.getMessage() == null ? "no additional details" : exception.getMessage();
+            throw new GenerationException("Gemini generation failed: "
+                    + exception.getClass().getSimpleName() + " - " + detail, exception);
         }
     }
 
@@ -148,5 +156,5 @@ public class GeminiLLMProvider implements LLMProvider {
     private record GeminiRequest(GeminiContent[] contents, GenerationConfig generationConfig) {}
     private record GeminiContent(GeminiPart[] parts) {}
     private record GeminiPart(String text) {}
-    private record GenerationConfig(String responseMimeType, JsonNode responseSchema) {}
+    private record GenerationConfig(String responseMimeType, JsonNode responseSchema, int maxOutputTokens) {}
 }
