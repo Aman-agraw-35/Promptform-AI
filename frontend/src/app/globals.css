@@ -121,6 +121,8 @@ select:focus-visible {
   justify-content: space-between;
 }
 .topbar {
+  position: relative;
+  z-index: 10;
   height: 50px;
   gap: 20px;
   border-bottom: 1px solid var(--line);
@@ -1133,12 +1135,12 @@ kbd {
 .auth-switch a { color: var(--accent); font-weight: 700; text-decoration: none; }
 .auth-privacy { margin: 30px 0 0; color: var(--muted); font-size: 8px; letter-spacing: 0.06em; }
 .profile-menu { position: relative; }
-.profile-button { display: inline-flex; align-items: center; gap: 7px; border: 0; background: transparent; color: var(--ink-soft); padding: 0; font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+.profile-button { display: inline-flex; align-items: center; gap: 7px; border: 0; background: transparent; color: var(--ink-soft); padding: 0; font-family: var(--mono); font-size: 10px; line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; }
 .profile-button:hover { color: var(--accent); }
 .profile-avatar { display: grid; width: 22px; height: 22px; place-items: center; border: 1px solid var(--accent); border-radius: 50%; color: var(--accent); font-size: 10px; }
-.profile-chevron { color: var(--muted); font-size: 14px; line-height: 1; }
+.profile-chevron { display: grid; width: 14px; height: 22px; place-items: center; color: var(--muted); font-size: 14px; line-height: 1; transform: translateY(-1px); }
 .profile-loading { display: inline-block; width: 52px; height: 10px; border-bottom: 1px solid var(--line-strong); opacity: 0.7; }
-.profile-popover { position: absolute; z-index: 20; top: calc(100% + 15px); right: 0; display: grid; width: min(235px, calc(100vw - 32px)); gap: 8px; border: 1px solid var(--line-strong); background: #1b1f1b; padding: 18px; box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35); }
+.profile-popover { position: absolute; z-index: 30; top: calc(100% + 15px); right: 0; display: grid; width: min(235px, calc(100vw - 32px)); gap: 8px; border: 1px solid var(--line-strong); background: #1b1f1b; padding: 18px; box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35); pointer-events: auto; }
 .profile-popover::before { position: absolute; top: -5px; right: 26px; width: 8px; height: 8px; border-top: 1px solid var(--line-strong); border-left: 1px solid var(--line-strong); background: #1b1f1b; content: ""; transform: rotate(45deg); }
 .profile-popover-label { margin: 0 0 6px; color: var(--muted); font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
 .profile-popover strong { color: var(--ink); font-size: 15px; }
