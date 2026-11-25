@@ -1,6 +1,8 @@
 server:
   port: 8080
 spring:
+  config:
+    import: optional:file:./backend/.env[.properties],optional:file:./.env[.properties],optional:file:./backend/application-local.yml,optional:file:./application-local.yml
   application:
     name: promptform-api
   datasource:
@@ -41,6 +43,9 @@ promptform:
     provider: ${PROMPTFORM_LLM_PROVIDER:demo}
     gemini-api-key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemini-3.8-flash}
+    openrouter-api-key: ${OPENROUTER_API_KEY:}
+    openrouter-model: ${OPENROUTER_MODEL:openrouter/free}
+    openrouter-base-url: ${OPENROUTER_BASE_URL:https://openrouter.ai/api/v1}
     timeout-seconds: ${GEMINI_TIMEOUT_SECONDS:30}
     cost-per-million-tokens: ${GEMINI_COST_PER_MILLION_TOKENS:0}
   auth:

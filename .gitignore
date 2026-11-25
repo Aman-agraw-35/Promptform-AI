@@ -9,6 +9,7 @@ target/
 .env
 .env.*
 !.env.example
+backend/application-local.yml
 *.log
 .idea/
 .vscode/
