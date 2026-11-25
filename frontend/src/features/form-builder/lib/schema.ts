@@ -8,9 +8,9 @@ export type VisibleWhen = {
 };
 
 export type ValidationRules = {
-  min?: number;
-  max?: number;
-  pattern?: string;
+  min?: number | null;
+  max?: number | null;
+  pattern?: string | null;
 };
 
 export type FormOption = {
@@ -22,17 +22,18 @@ export type UiNode = {
   type: FieldType | "section" | "columns";
   name?: string;
   label: string;
-  description?: string;
-  required?: boolean;
+  description?: string | null;
+  required?: boolean | null;
+  unique?: boolean | null;
   defaultValue?: unknown;
   options?: FormOption[];
   children?: UiNode[];
-  visibleWhen?: VisibleWhen;
-  validation?: ValidationRules;
+  visibleWhen?: VisibleWhen | null;
+  validation?: ValidationRules | null;
 };
 
 export type UiSchema = {
   title: string;
-  description?: string;
+  description?: string | null;
   children: UiNode[];
 };
